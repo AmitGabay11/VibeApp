@@ -3,7 +3,8 @@
     /* ✅ Language and Environment */
     "target": "ESNext",                                
     "module": "ESNext",                                
-    "jsx": "react-jsx",                               
+    "jsx": "react-jsx",
+    
 
     /* ✅ Modules */
     "moduleResolution": "node",                    
