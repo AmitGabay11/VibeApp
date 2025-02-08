@@ -7,15 +7,13 @@ import { useSelector } from "react-redux";
 import { CssBaseline, ThemeProvider } from "@mui/material";
 import { createTheme } from "@mui/material/styles";
 import { themeSettings } from "./theme";
-import { RootState } from "./state"; // Import Redux RootState type
-
-
+import { RootState } from "./state"; // Ensure correct import
 
 const App: React.FC = () => {
-  // 🔹 Properly type useSelector to get mode from Redux store
-  const mode = useSelector((state: RootState) => state.mode);
+  // ✅ Fix: Prevent 'undefined' state by providing a default value
+  const mode = useSelector((state: RootState) => state.auth?.mode ?? "light");
 
-  // 🔹 Ensure theme is correctly memoized
+  // ✅ Ensure theme is correctly memoized
   const theme = useMemo(() => createTheme(themeSettings(mode)), [mode]);
 
   return (
@@ -35,5 +33,3 @@ const App: React.FC = () => {
 };
 
 export default App;
-
-

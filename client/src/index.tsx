@@ -17,19 +17,21 @@ import {
 import storage from "redux-persist/lib/storage";
 import { PersistGate } from "redux-persist/integration/react";
 
-// 🔹 Define Persist Config Type
-const persistConfig: { key: string; storage: typeof storage; version: number } = {
+// 🔹 Define Persist Config
+const persistConfig = {
   key: "root",
   storage,
   version: 1,
 };
 
-// 🔹 Correctly Typed Persisted Reducer
+// 🔹 Correctly Persisted Reducer
 const persistedReducer = persistReducer(persistConfig, authReducer);
 
-// 🔹 Define Store with Proper Types
+// 🔹 Properly Define Redux Store
 export const store = configureStore({
-  reducer: persistedReducer,
+  reducer: {
+    auth: persistedReducer, // ✅ FIXED: Wrapped in an object
+  },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {
@@ -38,12 +40,14 @@ export const store = configureStore({
     }),
 });
 
-// 🔹 Define RootState and AppDispatch Types
+// 🔹 Define Correct Type Exports
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
+// 🔹 Persistor Instance
 const persistor = persistStore(store);
 
+// 🔹 Render App with Redux Provider & PersistGate
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <Provider store={store}>

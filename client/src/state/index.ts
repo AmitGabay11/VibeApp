@@ -1,9 +1,13 @@
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, PayloadAction, configureStore } from "@reduxjs/toolkit";
+
+// 🔹 Import `authReducer` correctly
+import authReducer from "./index"; 
 
 // 🔹 Define User Type
 interface User {
   id: string;
-  name: string;
+  firstName: string;
+  lastName: string;
   email: string;
   friends: User[];
 }
@@ -31,6 +35,7 @@ const initialState: AppState = {
   posts: [],
 };
 
+// 🔹 Create Redux Slice
 export const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -69,9 +74,20 @@ export const authSlice = createSlice({
   },
 });
 
+// 🔹 Export Actions
 export const { setMode, setLogin, setLogout, setFriends, setPosts, setPost } =
   authSlice.actions;
 
+// 🔹 Export Reducer
 export default authSlice.reducer;
-export type RootState = ReturnType<typeof authSlice.reducer>;
 
+// 🔹 Correct Redux Store Configuration
+export const store = configureStore({
+  reducer: {
+    auth: authReducer, // ✅ "auth" namespace added
+  },
+});
+
+// 🔹 Correct Type Exports
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
