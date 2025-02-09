@@ -11,7 +11,8 @@ import { RootState } from "./state"; // Ensure correct import
 
 const App: React.FC = () => {
   // ✅ Fix: Prevent 'undefined' state by providing a default value
-  const mode = useSelector((state: RootState) => state.auth?.mode ?? "light");
+  const mode = useSelector((state: RootState) => state.auth.mode || "light");
+
 
   // ✅ Ensure theme is correctly memoized
   const theme = useMemo(() => createTheme(themeSettings(mode)), [mode]);

@@ -33,7 +33,6 @@ const Navbar: React.FC = () => {
   const navigate = useNavigate();
   const user = useSelector((state: RootState) => state.auth.user); // ✅ Use RootState
   const isNonMobileScreens = useMediaQuery("(min-width:1000px)");
-  
   const theme = useTheme();
   const neutralLight = theme.palette.grey[200];
   const neutralDark = theme.palette.grey[100]; 
