@@ -26,7 +26,7 @@ export const register = async (req: Request, res: Response) => {
 
         // Save user and respond
         const savedUser = await newUser.save();
-        res.status(201).json(savedUser);
+        res.status(201).json({ success: true, user: savedUser });
     } catch (err) {
         res.status(500).json(err);
     }
@@ -35,27 +35,46 @@ export const register = async (req: Request, res: Response) => {
 // LOGGING IN
 export const login = async (req: Request, res: Response) => {
     try {
-        // Find user
-        const { email, password } = req.body;
-        const user = await User.findOne({ email });
-        if (!user) return res.status(400).json("Wrong credentials!");
-
-        // Validate password
-        if (!user.password) return res.status(400).json("Wrong credentials!");
-        const validPassword = await bcrypt.compare(password, user.password);
-        if (!validPassword) return res.status(400).json("Wrong credentials!");
-
-        // Check TOKEN_SECRET
-        const TOKEN_SECRET = process.env.TOKEN_SECRET;
-        if (!TOKEN_SECRET) {
-            throw new Error("❌ Missing TOKEN_SECRET in environment variables.");
-        }
-
-        // Create token
-        const token = jwt.sign({ _id: user._id }, TOKEN_SECRET);
-
-        res.status(200).json({ user, token });
+      console.log("🔹 Received Login Request");
+  
+      const { email, password } = req.body;
+      console.log(`📩 Email: ${email}`);
+  
+      const user = await User.findOne({ email });
+  
+      if (!user) {
+        console.error("❌ User not found");
+        return res.status(400).json({ error: "Wrong credentials!" });
+      }
+  
+      console.log("✅ User found:", user.email);
+  
+      // Validate password
+      if (!user.password) {
+        console.error("❌ User has no password stored");
+        return res.status(400).json({ error: "Wrong credentials!" });
+      }
+  
+      const validPassword = await bcrypt.compare(password, user.password);
+      if (!validPassword) {
+        console.error("❌ Invalid password");
+        return res.status(400).json({ error: "Wrong credentials!" });
+      }
+  
+      // Check TOKEN_SECRET
+      const TOKEN_SECRET = process.env.JWT_SECRET;
+      if (!TOKEN_SECRET) {
+        throw new Error("❌ Missing TOKEN_SECRET in environment variables.");
+      }
+  
+      // Create token
+      const token = jwt.sign({ _id: user._id }, TOKEN_SECRET, { expiresIn: "7d" });
+  
+      console.log("✅ User Logged In:", user.email);
+      res.status(200).json({ success: true, user, token });
     } catch (err) {
-        res.status(500).json(err);
+      console.error("❌ Login Error:", err);
+      res.status(500).json({ error: "Server error. Please try again." });
     }
-};
+  };
+  

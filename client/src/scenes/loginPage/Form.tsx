@@ -106,16 +106,28 @@ const Form: React.FC = () => {
         throw new Error(`Server Error: ${response.status}`);
       }
   
-      const savedUser = await response.json();
-      onSubmitProps.resetForm();
-  
-      if (savedUser) {
-        navigate("/");
-      }
-    } catch (error) {
-      console.error("Registration Error:", error);
+      // ✅ Check if response is JSON before parsing
+    const contentType = response.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      throw new Error("Server did not return JSON. Check backend response.");
     }
-  };
+
+    const savedUser = await response.json();
+    console.log("✅ Registration Response:", savedUser);
+
+    onSubmitProps.resetForm();
+
+    if (savedUser.success) {
+      console.log("✅ Navigating to login...");
+      setTimeout(() => navigate("/"), 100);
+    } else {
+      console.error("❌ Registration failed:", savedUser);
+    }
+  } catch (error) {
+    console.error("❌ Registration Error:", error);
+  }
+};
+
   
   
 
