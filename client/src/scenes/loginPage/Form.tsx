@@ -76,6 +76,7 @@ const Form: React.FC = () => {
   const { palette } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  console.log("🔄 useNavigate initialized:", navigate);
   const isNonMobile = useMediaQuery("(min-width:600px)");
   const isLogin = pageType === "login";
   const isRegister = pageType === "register";
@@ -94,12 +95,12 @@ const Form: React.FC = () => {
       formData.append("location", values.location);
       formData.append("occupation", values.occupation);
       if (values.picture) {
-        formData.append("picture", values.picture); // ✅ Correctly append file
+        formData.append("picture", values.picture);
       }
   
       const response = await fetch("http://localhost:5001/auth/register", {
         method: "POST",
-        body: formData, // ✅ Send as FormData
+        body: formData,
       });
   
       if (!response.ok) {
@@ -107,26 +108,28 @@ const Form: React.FC = () => {
       }
   
       // ✅ Check if response is JSON before parsing
-    const contentType = response.headers.get("content-type");
-    if (!contentType || !contentType.includes("application/json")) {
-      throw new Error("Server did not return JSON. Check backend response.");
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Server did not return JSON. Check backend response.");
+      }
+  
+      const savedUser = await response.json();
+      console.log("✅ Registration Response:", savedUser);
+  
+      onSubmitProps.resetForm();
+  
+      if (savedUser.success) {
+        console.log("✅ Navigating to login page...");
+        setPageType("login");
+        setTimeout(() => navigate("/", { replace: true }), 100);// Delay to ensure execution
+      } else {
+        console.error("❌ Registration failed:", savedUser);
+      }
+    } catch (error) {
+      console.error("❌ Registration Error:", error);
     }
-
-    const savedUser = await response.json();
-    console.log("✅ Registration Response:", savedUser);
-
-    onSubmitProps.resetForm();
-
-    if (savedUser.success) {
-      console.log("✅ Navigating to login...");
-      setTimeout(() => navigate("/"), 100);
-    } else {
-      console.error("❌ Registration failed:", savedUser);
-    }
-  } catch (error) {
-    console.error("❌ Registration Error:", error);
-  }
-};
+  };
+  
 
   
   
@@ -310,5 +313,6 @@ const Form: React.FC = () => {
     </Formik>
   );
 };
+
 
 export default Form;
