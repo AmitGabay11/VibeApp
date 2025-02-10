@@ -86,22 +86,20 @@ const Form: React.FC = () => {
     onSubmitProps: FormikHelpers<RegisterValues>
   ) => {
     try {
-      // 🔹 Convert to JSON format (instead of FormData)
-      const requestBody = {
-        firstName: values.firstName,
-        lastName: values.lastName,
-        email: values.email,
-        password: values.password,
-        location: values.location,
-        occupation: values.occupation,
-        picture: values.picture?.name || "", // ✅ Send only the filename
-      };
+      const formData = new FormData();
+      formData.append("firstName", values.firstName);
+      formData.append("lastName", values.lastName);
+      formData.append("email", values.email);
+      formData.append("password", values.password);
+      formData.append("location", values.location);
+      formData.append("occupation", values.occupation);
+      if (values.picture) {
+        formData.append("picture", values.picture); // ✅ Correctly append file
+      }
   
-      // 🔹 Send JSON request
       const response = await fetch("http://localhost:5001/auth/register", {
         method: "POST",
-        headers: { "Content-Type": "application/json" }, // ✅ Ensure correct header
-        body: JSON.stringify(requestBody),
+        body: formData, // ✅ Send as FormData
       });
   
       if (!response.ok) {
@@ -112,12 +110,13 @@ const Form: React.FC = () => {
       onSubmitProps.resetForm();
   
       if (savedUser) {
-        navigate("/"); // ✅ Redirect to login page
+        navigate("/");
       }
     } catch (error) {
       console.error("Registration Error:", error);
     }
   };
+  
   
 
   // 🔹 Login User
