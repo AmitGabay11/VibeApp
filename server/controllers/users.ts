@@ -8,16 +8,25 @@ interface AuthRequest extends Request {
 }
 
 // READ: Get User by ID
-export const getUser = async (req: AuthRequest, res: Response) => {
+export const getUser = async (req: Request, res: Response) => {
     try {
-        const user = await User.findById(req.params.id).select("-password"); // Exclude password
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        res.status(200).json(user);
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error });
+      const user = await User.findById(req.params.id).select("-password");
+      if (!user) return res.status(404).json({ message: "User not found" });
+  
+      // ✅ Extract filename from stored picture path
+      const picturePath = user.picture ? `/upload/${user.picture.split("/").pop()}` : "default-profile.png";
+  
+      res.status(200).json({
+        ...user.toObject(),
+        picturePath, // ✅ Always return a valid path
+      });
+    } catch (err) {
+      res.status(500).json({ message: "Error fetching user" });
     }
-};
+  };
+  
+  
+  
 
 // READ: Get User's Friends
 export const getUserFriends = async (req: AuthRequest, res: Response) => {

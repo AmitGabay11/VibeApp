@@ -14,6 +14,8 @@ import { register } from './controllers/auth.js';
 import postRoutes from './routes/posts.js'; 
 import { createPost } from './controllers/posts.js';  
 import { verifyToken } from './middleware/auth.js';
+import imageRoutes from "./routes/images.js";
+import uploadRoutes from "./routes/upload.js"; // Import the upload route
 
 
 // CONFIGURATIONS
@@ -28,7 +30,14 @@ app.use(cors());
 app.use(helmet());
 app.use(morgan('common'));
 app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
-app.use('/assets', express.static(path.join(__dirname, 'public/assets')));
+// ✅ Serve images from "public/assets" under "/upload"
+app.use("/upload", express.static(path.join(__dirname, "../public/assets")));
+
+
+
+
+
+
 
 // FILE STORAGE
 const storage = multer.diskStorage({

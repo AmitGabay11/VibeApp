@@ -5,11 +5,12 @@ import authReducer from "./index";
 
 // 🔹 Define User Type
 interface User {
-  id: string;
+  _id: string;
   firstName: string;
   lastName: string;
   email: string;
   friends: User[];
+  picturePath?: string;
 }
 
 // 🔹 Define Post Type

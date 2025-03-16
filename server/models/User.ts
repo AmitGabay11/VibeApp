@@ -14,44 +14,23 @@ export interface IUser extends Document {
     createdAt?: Date;
     updatedAt?: Date;
     friends: mongoose.Types.ObjectId[];
-    _v: number;
+    __v: number;  // Fixed `_v` to `__v` as Mongoose uses `__v` for versioning
+    picturePath: { type: String, default: "default-profile.png" }, 
 }
 
 // Define Mongoose schema
 const userSchema = new Schema<IUser>(
     {
-        firstName: {
-            type: String,
-            required: true,
-            minlength: 2,
-            maxlength: 50,
-        },
-        lastName: {
-            type: String,
-            required: true,
-            minlength: 2,
-            maxlength: 50,
-        },
-        email: {
-            type: String,
-            required: true,
-            maxlength: 255,
-            unique: true,
-        },
-        password: {
-            type: String,
-            required: true,
-            minlength: 5,
-            maxlength: 1024,
-        },
-        picture: {
-            type: String,
-            default: '',
-        },
+        firstName: { type: String, required: true, minlength: 2, maxlength: 50 },
+        lastName: { type: String, required: true, minlength: 2, maxlength: 50 },
+        email: { type: String, required: true, maxlength: 255, unique: true },
+        password: { type: String, required: true, minlength: 5, maxlength: 1024 },
+        picture: { type: String, default: '' },
         location: { type: String, default: '' },
         occupation: { type: String, default: '' },
-        viewedProfile: { type: Number, default: 0 },  // Fixed typo
+        viewedProfile: { type: Number, default: 0 },
         impressions: { type: Number, default: 0 },
+        friends: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // Ensuring correct reference
     },
     { timestamps: true }
 );

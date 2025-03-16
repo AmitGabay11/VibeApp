@@ -22,6 +22,7 @@ export const register = async (req: Request, res: Response) => {
             occupation: req.body.occupation,
             viewedProfile: Math.floor(Math.random() * 100),
             impressions: Math.floor(Math.random() * 100),
+            picturePath: req.file ? req.file.path : "default-profile.png",
         });
 
         // Save user and respond
