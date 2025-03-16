@@ -39,18 +39,18 @@ const UserWidget = ({ userId, picturePath }: UserWidgetProps) => {
 
   const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5001";
 
-  const getUser = async () => {
-      const response = await fetch(`${backendUrl}/users/${userId}`, {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-      });
-      const data = await response.json();
-      setUser(data);
-  };
-
   useEffect(() => {
+      const getUser = async () => {
+          const response = await fetch(`${backendUrl}/users/${userId}`, {
+              method: "GET",
+              headers: { Authorization: `Bearer ${token}` },
+          });
+          const data = await response.json();
+          setUser(data);
+      };
+
       getUser();
-  }, []);
+  }, [userId, token, backendUrl]);
 
   if (!user) {
       return null;
