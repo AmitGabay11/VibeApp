@@ -81,13 +81,24 @@ import {
           {description}
         </Typography>
         {picturePath && (
-          <img
+            <img
             width="100%"
             height="auto"
             alt="post"
             style={{ borderRadius: "0.75rem", marginTop: "0.75rem" }}
-            src={`http://localhost:5001/assets/${picturePath}`}
+            src={`http://localhost:5001/upload/${picturePath}`} // ✅ Simple and correct
+            onError={(e) => {
+              const img = e.target as HTMLImageElement;
+              if (!img.dataset.fallback) {
+                console.warn("🛑 Post image failed to load. Falling back.");
+                img.src = "/assets/default-post.png";
+                img.dataset.fallback = "true";
+              } else {
+                console.error("❌ Fallback image also failed. Giving up.");
+              }
+            }}
           />
+        
         )}
         <FlexBetween mt="0.25rem">
           <FlexBetween gap="1rem">

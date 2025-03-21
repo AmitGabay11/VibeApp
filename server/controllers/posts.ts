@@ -10,31 +10,32 @@ interface AuthRequest extends Request {
 // CREATE: Create a New Post
 export const createPost = async (req: AuthRequest, res: Response) => {
     try {
-        const { userId, description, picturePath } = req.body;
-
-        // Ensure user exists before creating a post
-        const user = await User.findById(userId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        const newPost: IPost = new Post({
-            userId,
-            firstName: user.firstName,
-            lastName: user.lastName,
-            location: user.location || "",
-            description,
-            userPicturePath: user.picture || "",
-            picturePath,
-            likes: new Map(),
-            comments: [],
-        });
-
-        await newPost.save();
-        const posts = await Post.find();
-        res.status(201).json(posts);
+      const { userId, description } = req.body;
+      const picturePath = req.file?.filename || ""; // ✅ Use filename from multer
+  
+      const user = await User.findById(userId);
+      if (!user) return res.status(404).json({ message: "User not found" });
+  
+      const newPost: IPost = new Post({
+        userId,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        location: user.location || "",
+        description,
+        userPicturePath: user.picture || "",
+        picturePath,
+        likes: new Map(),
+        comments: [],
+      });
+  
+      await newPost.save();
+      const posts = await Post.find();
+      res.status(201).json(posts);
     } catch (err) {
-        res.status(409).json({ message: "Failed to create post", error: err });
+      res.status(409).json({ message: "Failed to create post", error: err });
     }
-};
+  };
+  
 
 // READ: Get All Feed Posts
 export const getFeedPosts = async (req: Request, res: Response) => {

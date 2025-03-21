@@ -52,21 +52,22 @@ import {
       formData.append("userId", _id);
       formData.append("description", post);
       if (image) {
-        formData.append("picture", image);
-        formData.append("picturePath", image.name);
+        formData.append("picture", image); // ✅ Only this
+        // REMOVE this line ↓
+        // formData.append("picturePath", image.name);
       }
-  
+    
       const response = await fetch("http://localhost:5001/posts", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
       const posts = await response.json();
-      console.log("🔥 Posts returned from backend:", posts);
       dispatch(setPosts({ posts }));
       setImage(null);
       setPost("");
     };
+    
   
     return (
       <WidgetWrapper>
