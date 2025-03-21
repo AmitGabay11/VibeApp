@@ -1,9 +1,13 @@
+// src/index.tsx
+
 import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
-import authReducer from "./state";
+
 import { Provider } from "react-redux";
 import { configureStore } from "@reduxjs/toolkit";
+import authReducer from "./state";
+
 import {
   persistStore,
   persistReducer,
@@ -17,20 +21,25 @@ import {
 import storage from "redux-persist/lib/storage";
 import { PersistGate } from "redux-persist/integration/react";
 
-// 🔹 Define Persist Config
+// =====================
+// 🔹 Redux Persist Config
+// =====================
+
 const persistConfig = {
   key: "root",
   storage,
   version: 1,
 };
 
-// 🔹 Correctly Persisted Reducer
 const persistedReducer = persistReducer(persistConfig, authReducer);
 
-// 🔹 Properly Define Redux Store
+// =====================
+// 🔹 Configure Redux Store
+// =====================
+
 export const store = configureStore({
   reducer: {
-    auth: persistedReducer, // ✅ FIXED: Wrapped in an object
+    auth: persistedReducer, // ✅ matches shape: state.auth.*
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
@@ -40,14 +49,19 @@ export const store = configureStore({
     }),
 });
 
-// 🔹 Define Correct Type Exports
+// =====================
+// 🔹 Type Exports
+// =====================
+
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
 
-// 🔹 Persistor Instance
 const persistor = persistStore(store);
 
-// 🔹 Render App with Redux Provider & PersistGate
+// =====================
+// 🔹 Render App
+// =====================
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <Provider store={store}>

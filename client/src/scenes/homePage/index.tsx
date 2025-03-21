@@ -2,18 +2,22 @@ import { Box } from "@mui/material";
 import React from "react";
 import Navbar from "../navbar";
 import UserWidget from "../widgets/UserWidget";
-import { useSelector } from "react-redux";
-import { RootState } from "../../state";
-import { useMediaQuery } from "@mui/material";
 import MyPostWidget from "../widgets/MyPostWidget";
+import PostsWidget from "../widgets/PostsWidget"; // ✅ Added this!
+import { useSelector } from "react-redux";
+import { RootState } from "../../state/store";
+import { useMediaQuery } from "@mui/material";
 
 const HomePage: React.FC = () => {
   const isNonMobileScreens = useMediaQuery("(min-width: 1000px)");
-  const user = useSelector((state: RootState) => state.auth?.user);
+  const user = useSelector((state: RootState) => state.auth.user);
   const _id = user?._id;
   const picturePath = user?.picturePath;
 
-  console.log("HomePage - Redux User State:", useSelector((state: RootState) => state)); // ✅ Debugging Redux state
+  console.log(
+    "HomePage - Redux User State:",
+    useSelector((state: RootState) => state)
+  );
 
   return (
     <Box>
@@ -25,15 +29,25 @@ const HomePage: React.FC = () => {
         gap="0.5rem"
         justifyContent="space-between"
       >
+        {/* Left column - User Info */}
         <Box flexBasis={isNonMobileScreens ? "26%" : undefined}>
           <UserWidget userId={_id || ""} picturePath={picturePath || ""} />
         </Box>
+
+        {/* Middle column - Post creation and posts feed */}
         <Box
-          flexBasis={isNonMobileScreens ? "42%" : "100%"} // ✅ Ensures visibility on all screens
+          flexBasis={isNonMobileScreens ? "42%" : "100%"}
           mt={isNonMobileScreens ? undefined : "2rem"}
         >
-          {user && <MyPostWidget picturePath={picturePath || ""} />}  {/* ✅ Prevents crash if user is undefined */}
+          {user && (
+            <>
+              <MyPostWidget picturePath={picturePath || ""} />
+              <PostsWidget userId={_id || ""} /> {/* ✅ This shows the posts */}
+            </>
+          )}
         </Box>
+
+        {/* Right column - (Optional for future widgets) */}
         {isNonMobileScreens && <Box flexBasis="26%" />}
       </Box>
     </Box>

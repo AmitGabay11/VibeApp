@@ -1,26 +1,35 @@
-import { createSlice, PayloadAction, configureStore } from "@reduxjs/toolkit";
+// src/state/index.ts
 
-// 🔹 Import `authReducer` correctly
-import authReducer from "./index"; 
+import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
-// 🔹 Define User Type
-interface User {
+// =====================
+// 🔹 Types
+// =====================
+
+export interface User {
   _id: string;
   firstName: string;
   lastName: string;
   email: string;
   friends: User[];
   picturePath?: string;
+  location?: string;
+  occupation?: string;
 }
 
-// 🔹 Define Post Type
-interface Post {
+export interface Post {
   _id: string;
-  content: string;
-  author: string;
+  userId: string;
+  firstName: string;
+  lastName: string;
+  description: string;
+  location: string;
+  picturePath: string;
+  userPicturePath: string;
+  likes: { [userId: string]: boolean };
+  comments: string[];
 }
 
-// 🔹 Define State Type
 interface AppState {
   mode: "light" | "dark";
   user: User | null;
@@ -28,7 +37,10 @@ interface AppState {
   posts: Post[];
 }
 
-// 🔹 Define Initial State
+// =====================
+// 🔹 Initial State
+// =====================
+
 const initialState: AppState = {
   mode: "light",
   user: null,
@@ -36,7 +48,10 @@ const initialState: AppState = {
   posts: [],
 };
 
-// 🔹 Create Redux Slice
+// =====================
+// 🔹 Redux Slice
+// =====================
+
 export const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -44,51 +59,42 @@ export const authSlice = createSlice({
     setMode: (state) => {
       state.mode = state.mode === "light" ? "dark" : "light";
     },
-
     setLogin: (state, action: PayloadAction<{ user: User; token: string }>) => {
       state.user = action.payload.user;
       state.token = action.payload.token;
     },
-
     setLogout: (state) => {
       state.user = null;
       state.token = null;
     },
-
-    setFriends: (state, action: PayloadAction<{ friends: User[] }>) => {
+    setFriends: (state, action: PayloadAction<User[]>) => {
       if (state.user) {
-        state.user.friends = action.payload.friends;
-      } else {
-        console.error("User friends non-existent");
+        state.user.friends = action.payload;
       }
     },
-
     setPosts: (state, action: PayloadAction<{ posts: Post[] }>) => {
       state.posts = action.payload.posts;
     },
-
-    setPost: (state, action: PayloadAction<{ post_id: string; post: Post }>) => {
-      state.posts = state.posts.map((post) =>
-        post._id === action.payload.post_id ? action.payload.post : post
+    setPost: (state, action: PayloadAction<{ post: Post }>) => {
+      const updatedPosts = state.posts.map((p) =>
+        p._id === action.payload.post._id ? action.payload.post : p
       );
+      state.posts = updatedPosts;
     },
   },
 });
 
-// 🔹 Export Actions
-export const { setMode, setLogin, setLogout, setFriends, setPosts, setPost } =
-  authSlice.actions;
+// =====================
+// 🔹 Exports
+// =====================
 
-// 🔹 Export Reducer
+export const {
+  setMode,
+  setLogin,
+  setLogout,
+  setFriends,
+  setPosts,
+  setPost,
+} = authSlice.actions;
+
 export default authSlice.reducer;
-
-// 🔹 Correct Redux Store Configuration
-export const store = configureStore({
-  reducer: {
-    auth: authReducer, // ✅ "auth" namespace added
-  },
-});
-
-// 🔹 Correct Type Exports
-export type RootState = ReturnType<typeof store.getState>;
-export type AppDispatch = typeof store.dispatch;
