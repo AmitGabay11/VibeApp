@@ -113,3 +113,41 @@ export const addComment = async (req: Request, res: Response) => {
     }
   };
   
+  // UPDATE: Edit a Post
+export const editPost = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // Post ID
+    const { description } = req.body; // New description
+    const picture = req.file?.filename; // New picture (if provided)
+
+    const updateData: any = { description };
+    if (picture) {
+      updateData.picturePath = `/upload/${picture}`;
+    }
+
+    const updatedPost = await Post.findByIdAndUpdate(id, updateData, { new: true });
+    if (!updatedPost) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.status(200).json(updatedPost);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to edit post", error: err });
+  }
+};
+
+// DELETE: Delete a Post
+export const deletePost = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params; // Post ID
+
+    const deletedPost = await Post.findByIdAndDelete(id);
+    if (!deletedPost) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+
+    res.status(200).json({ message: "Post deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to delete post", error: err });
+  }
+};

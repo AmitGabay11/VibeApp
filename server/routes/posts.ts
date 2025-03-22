@@ -1,17 +1,30 @@
-import express from 'express';
-import {  getUserPosts, getFeedPosts, likePost, addComment } from '../controllers/posts.js';
-import { verifyToken } from '../middleware/auth.js';
+import express from "express";
+import { getUserPosts, getFeedPosts, likePost, addComment, editPost, deletePost } from "../controllers/posts.js";
+import { verifyToken } from "../middleware/auth.js";
+import multer from "multer";
 
 const router = express.Router();
 
-//READ
-router.get('/', verifyToken, getFeedPosts);
-router.get('/:userId/posts', verifyToken, getUserPosts);
+// Multer configuration for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/assets");
+  },
+  filename: (req, file, cb) => {
+    const uniqueName = `${Date.now()}-${file.originalname}`;
+    cb(null, uniqueName);
+  },
+});
+const upload = multer({ storage });
 
-//UPDATE
-router.patch('/:id/like', verifyToken, likePost);
+// READ
+router.get("/", verifyToken, getFeedPosts);
+router.get("/:userId/posts", verifyToken, getUserPosts);
+
+// UPDATE
+router.patch("/:id/like", verifyToken, likePost);
 router.patch("/:id/comment", verifyToken, addComment);
-
+router.put("/:id", verifyToken, upload.single("picture"), editPost); // ✅ Edit a Post
+router.delete("/:id", verifyToken, deletePost); // ✅ Delete a Post
 
 export default router;
-

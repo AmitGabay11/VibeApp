@@ -5,7 +5,6 @@ import PostWidget from "./PostWidget";
 import { RootState } from "../../state/store";
 import { AppDispatch } from "../../state/store";
 
-// Define the PostType interface
 interface PostType {
   _id: string;
   userId: string;
@@ -30,25 +29,47 @@ const PostsWidget: React.FC<Props> = ({ userId, isProfile = false }) => {
   const posts = useSelector((state: RootState) => state.auth.posts);
 
   const getPosts = async () => {
-    console.log("📡 Fetching all posts...");
-    const response = await fetch("http://localhost:5001/posts", {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data: PostType[] = await response.json();
-    console.log("📨 Posts fetched (global):", data);
-    dispatch(setPosts({ posts: data }));
+    try {
+      console.log("📡 Fetching all posts...");
+      const response = await fetch("http://localhost:5001/posts", {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
+        console.log("📨 Posts fetched (global):", data);
+        dispatch(setPosts({ posts: data }));
+      } else {
+        console.error("❌ Unexpected response format:", data);
+        dispatch(setPosts({ posts: [] }));
+      }
+    } catch (error) {
+      console.error("❌ Error fetching posts:", error);
+      dispatch(setPosts({ posts: [] }));
+    }
   };
 
   const getUserPosts = async () => {
-    console.log("📡 Fetching user posts for:", userId);
-    const response = await fetch(`http://localhost:5001/posts/${userId}/posts`, {
-      method: "GET",
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    const data: PostType[] = await response.json();
-    console.log("📨 Posts fetched (user):", data);
-    dispatch(setPosts({ posts: data }));
+    try {
+      console.log("📡 Fetching user posts for:", userId);
+      const response = await fetch(`http://localhost:5001/posts/${userId}/posts`, {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await response.json();
+
+      if (Array.isArray(data)) {
+        console.log("📨 Posts fetched (user):", data);
+        dispatch(setPosts({ posts: data }));
+      } else {
+        console.error("❌ Unexpected response format:", data);
+        dispatch(setPosts({ posts: [] }));
+      }
+    } catch (error) {
+      console.error("❌ Error fetching user posts:", error);
+      dispatch(setPosts({ posts: [] }));
+    }
   };
 
   useEffect(() => {
@@ -56,13 +77,13 @@ const PostsWidget: React.FC<Props> = ({ userId, isProfile = false }) => {
     console.log("🔍 userId:", userId);
     console.log("🔍 isProfile:", isProfile);
     isProfile ? getUserPosts() : getPosts();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, isProfile, token]); // Add dependencies
 
   useEffect(() => {
     console.log("🧾 Redux posts state updated:", posts);
   }, [posts]);
 
-  if (!posts || posts.length === 0) {
+  if (!Array.isArray(posts) || posts.length === 0) {
     return (
       <p style={{ color: "gray", textAlign: "center" }}>
         No posts to display.

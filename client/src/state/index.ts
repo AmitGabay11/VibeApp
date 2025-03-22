@@ -73,7 +73,7 @@ export const authSlice = createSlice({
       }
     },
     setPosts: (state, action: PayloadAction<{ posts: Post[] }>) => {
-      state.posts = action.payload.posts;
+      state.posts = Array.isArray(action.payload.posts) ? action.payload.posts : [];
     },
     setPost: (state, action: PayloadAction<{ post: Post }>) => {
       const updatedPosts = state.posts.map((p) =>
@@ -81,12 +81,11 @@ export const authSlice = createSlice({
       );
       state.posts = updatedPosts;
     },
+    deletePost: (state, action: PayloadAction<{ postId: string }>) => {
+      state.posts = state.posts.filter((post) => post._id !== action.payload.postId);
+    },
   },
 });
-
-// =====================
-// 🔹 Exports
-// =====================
 
 export const {
   setMode,
@@ -95,6 +94,7 @@ export const {
   setFriends,
   setPosts,
   setPost,
+  deletePost,
 } = authSlice.actions;
 
 export default authSlice.reducer;

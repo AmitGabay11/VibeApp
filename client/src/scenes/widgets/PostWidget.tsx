@@ -4,6 +4,8 @@ import {
   FavoriteOutlined,
   ShareOutlined,
   Send,
+  EditOutlined,
+  DeleteOutlined,
 } from "@mui/icons-material";
 import {
   Box,
@@ -12,13 +14,14 @@ import {
   Typography,
   useTheme,
   InputBase,
+  Button,
 } from "@mui/material";
 import FlexBetween from "../../components/FlexBetween";
 import Friend from "../../components/Friend";
 import WidgetWrapper from "../../components/WidgetWrapper";
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { setPost } from "../../state";
+import { setPost, deletePost } from "../../state";
 import { RootState } from "../../state/store";
 import { AppDispatch } from "../../state/store";
 
@@ -49,6 +52,8 @@ const PostWidget: React.FC<Props> = ({
 }) => {
   const [isComments, setIsComments] = useState(false);
   const [newComment, setNewComment] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedDescription, setEditedDescription] = useState(description);
   const dispatch = useDispatch<AppDispatch>();
   const token = useSelector((state: RootState) => state.auth.token);
   const loggedInUserId = useSelector(
@@ -74,6 +79,34 @@ const PostWidget: React.FC<Props> = ({
     dispatch(setPost({ post: updatedPost }));
   };
 
+  const handleEdit = async () => {
+    const response = await fetch(`http://localhost:5001/posts/${postId}`, {
+      method: "PUT",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ description: editedDescription }),
+    });
+
+    const updatedPost = await response.json();
+    dispatch(setPost({ post: updatedPost }));
+    setIsEditing(false);
+  };
+
+  const handleDelete = async () => {
+    const response = await fetch(`http://localhost:5001/posts/${postId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.ok) {
+      dispatch(deletePost({ postId }));
+    }
+  };
+
   const submitComment = async () => {
     if (!newComment.trim()) return;
 
@@ -91,6 +124,8 @@ const PostWidget: React.FC<Props> = ({
     setNewComment("");
   };
 
+  const isOwner = loggedInUserId === postUserId;
+
   return (
     <WidgetWrapper m="2rem 0">
       <Friend
@@ -99,9 +134,46 @@ const PostWidget: React.FC<Props> = ({
         subtitle={location}
         userPicturePath={userPicturePath}
       />
-      <Typography color={main} sx={{ mt: "1rem" }}>
-        {description}
-      </Typography>
+      {isEditing ? (
+        <Box>
+          <InputBase
+            value={editedDescription}
+            onChange={(e) => setEditedDescription(e.target.value)}
+            fullWidth
+            sx={{
+              backgroundColor: palette.grey[100],
+              borderRadius: "0.5rem",
+              padding: "0.5rem",
+              marginBottom: "0.5rem",
+            }}
+          />
+          <Button
+            onClick={handleEdit}
+            sx={{
+              color: palette.background.paper,
+              backgroundColor: palette.primary.main,
+              borderRadius: "3rem",
+              marginRight: "0.5rem",
+            }}
+          >
+            Save
+          </Button>
+          <Button
+            onClick={() => setIsEditing(false)}
+            sx={{
+              color: palette.background.paper,
+              backgroundColor: palette.grey[500],
+              borderRadius: "3rem",
+            }}
+          >
+            Cancel
+          </Button>
+        </Box>
+      ) : (
+        <Typography color={main} sx={{ mt: "1rem" }}>
+          {description}
+        </Typography>
+      )}
       {picturePath && (
         <img
           width="100%"
@@ -146,9 +218,21 @@ const PostWidget: React.FC<Props> = ({
           </FlexBetween>
         </FlexBetween>
 
-        <IconButton>
-          <ShareOutlined />
-        </IconButton>
+        <FlexBetween gap="0.3rem">
+          {isOwner && (
+            <>
+              <IconButton onClick={() => setIsEditing(true)}>
+                <EditOutlined />
+              </IconButton>
+              <IconButton onClick={handleDelete}>
+                <DeleteOutlined />
+              </IconButton>
+            </>
+          )}
+          <IconButton>
+            <ShareOutlined />
+          </IconButton>
+        </FlexBetween>
       </FlexBetween>
 
       {isComments && (
