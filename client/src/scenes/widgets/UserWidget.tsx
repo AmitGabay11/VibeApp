@@ -59,30 +59,42 @@ import {
     }, [userId, token, backendUrl]);
   
     const handleSave = async () => {
-      const formData = new FormData();
-      formData.append("firstName", firstName);
-      formData.append("lastName", lastName);
-      formData.append("occupation", occupation);
-      if (newPicture) {
-        formData.append("picture", newPicture);
+        const formData = new FormData();
+        formData.append("firstName", firstName);
+        formData.append("lastName", lastName);
+        formData.append("occupation", occupation);
+        if (newPicture) {
+          formData.append("picture", newPicture);
+        }
+      
+        try {
+          const response = await fetch(`${backendUrl}/users/${userId}`, {
+            method: "PUT",
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+            body: formData,
+          });
+      
+          if (response.ok) {
+            console.log("User updated successfully");
+            window.location.reload(); // Refresh the page
+          } else {
+            console.error("Failed to update user");
+          }
+        if (response.ok) {
+          const updatedUser = await response.json();
+          setUser(updatedUser);
+          setEditMode(false);
+          setNewPicture(null);
+          console.log("User updated successfully");
+          window.location.reload(); // Refresh the page
+        } else {
+          console.error("Failed to update user");
+        }
+      } catch (error) {
+        console.error("Error updating user:", error);
       }
-      console.log(firstName,"1111");
-      console.log(lastName,"2222");
-      console.log(occupation,"3333");
-      console.log(newPicture,"5555");
-      console.log(userId,"4444");
-      const response = await fetch(`${backendUrl}/users/${userId}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
-  
-      const updatedUser = await response.json();
-      setUser(updatedUser);
-      setEditMode(false);
-      setNewPicture(null);
     };
   
     if (!user) return null;

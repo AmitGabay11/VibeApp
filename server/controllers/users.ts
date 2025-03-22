@@ -122,6 +122,7 @@ export const updateUser = async (req: Request, res: Response) => {
     console.log("🖼 Serving image:2");
     console.log(updateData);
     const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true });
+    //update userPicturePath in this user posts
     console.log(updatedUser);
     res.status(200).json(updatedUser);
   } catch (err) {
