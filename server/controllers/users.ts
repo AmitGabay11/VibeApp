@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import User, { IUser } from "../models/User.js"; 
+import Post from "../models/Post.js"; // Import the Post model
 import { runInNewContext } from "vm";
 
 // Define request type
@@ -111,24 +112,56 @@ interface UpdateUserProfileRequest extends Request {
 
 // ✅ Update user info & profile picture
 export const updateUser = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const updateData: any = {
-      firstName: req.body.firstName,
-      lastName: req.body.lastName,
-      occupation: req.body.occupation,
-       picture : req.file?.filename
-    };
-    console.log("🖼 Serving image:2");
-    console.log(updateData);
-    const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true });
-    //update userPicturePath in this user posts
-    console.log(updatedUser);
-    res.status(200).json(updatedUser);
-  } catch (err) {
-    console.log("err");
-    res.status(500).json({ message: "Failed to update user", error: err });
-  }
-};
+    try {
+      const { id } = req.params;
+      const updateData: any = {
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
+        occupation: req.body.occupation,
+        picture: req.file?.filename,
+      };
+  
+      console.log("🖼 Serving image:2");
+      console.log("Update Data:", updateData);
+  
+      // Update the user
+      await User.findByIdAndUpdate(id, updateData, { new: true });
+  
+      // Fetch the updated user to ensure we have the latest data
+      const updatedUser = await User.findById(id);
+      if (!updatedUser) {
+        return res.status(404).json({ message: "User not found" });
+      }
+  
+      console.log("✅ Updated User:", updatedUser);
+  
+      // Ensure the picture path is correct
+      const updatedPicturePath = req.file?.filename
+        ? `/upload/${req.file.filename}`
+        : `/upload/${updatedUser.picture}`;
+  
+      // Ensure firstName and lastName are not undefined
+      const updatedFirstName = updatedUser.firstName || "Unknown";
+      const updatedLastName = updatedUser.lastName || "Unknown";
+  
+      // Update all posts associated with the user
+      const updateResult = await Post.updateMany(
+        { userId: id },
+        {
+          $set: {
+            userPicturePath: updatedPicturePath,
+            firstName: updatedFirstName,
+            lastName: updatedLastName,
+          },
+        }
+      );
+  
+      console.log("✅ Posts Updated:", updateResult);
+      res.status(200).json(updatedUser);
+    } catch (err) {
+      console.error("❌ Error in updateUser:", err);
+      res.status(500).json({ message: "Failed to update user", error: err });
+    }
+  };
 
   
