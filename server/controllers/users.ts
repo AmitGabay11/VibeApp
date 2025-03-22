@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import mongoose from "mongoose";
 import User, { IUser } from "../models/User.js"; 
+import { runInNewContext } from "vm";
 
 // Define request type
 interface AuthRequest extends Request {
@@ -95,3 +96,38 @@ export const addRemoveFriend = async (req: AuthRequest, res: Response) => {
         res.status(500).json({ message: "Server error", error });
     }
 };
+
+interface UpdateUserProfileRequest extends Request {
+    params: {
+        userId: string;
+    };
+    body: {
+        firstName?: string;
+        lastName?: string;
+        occupation?: string;
+        picturePath?: string;
+    };
+}
+
+// ✅ Update user info & profile picture
+export const updateUser = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updateData: any = {
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      occupation: req.body.occupation,
+       picture : req.file?.filename
+    };
+    console.log("🖼 Serving image:2");
+    console.log(updateData);
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, { new: true });
+    console.log(updatedUser);
+    res.status(200).json(updatedUser);
+  } catch (err) {
+    console.log("err");
+    res.status(500).json({ message: "Failed to update user", error: err });
+  }
+};
+
+  

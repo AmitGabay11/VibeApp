@@ -8,6 +8,7 @@ import multer from 'multer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import morgan from 'morgan';
+import { v4 as uuidv4 } from 'uuid';
 
 import authRoutes from './routes/auth.js';  
 import userRoutes from './routes/users.js'; 
@@ -32,22 +33,20 @@ app.use(bodyParser.json({ limit: '50mb' }));
 app.use(bodyParser.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors());
 app.use(helmet());
-app.use(morgan('common'));
 app.use(helmet.crossOriginResourcePolicy({ policy: 'cross-origin' }));
 
 // ✅ Serve static assets from public/assets
 app.use("/upload", express.static(path.join(__dirname, "../public/assets")));
 
-// ✅ Multer storage configuration with unique filename
+// ✅ Multer storage configuration with UUID filenames
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "public/assets");
   },
   filename: (req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    const base = path.basename(file.originalname, ext);
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, `${base}-${uniqueSuffix}${ext}`);
+    const ext = path.extname(file.originalname) || ".jpeg";
+    const uniqueName = `${uuidv4()}${ext}`;
+    cb(null, uniqueName);
   },
 });
 
@@ -55,18 +54,18 @@ const upload = multer({ storage });
 
 // ROUTES WITH FILE UPLOADS
 app.post("/auth/register", upload.single("picture"), register);
-app.post("/posts", verifyToken, upload.single("picture"), async (req, res) => {
-  // ✅ Use file.filename as the actual saved picturePath
+
+app.post("/posts", verifyToken, upload.single("picture"), (req, res) => {
   req.body.picturePath = req.file?.filename || "";
   return createPost(req, res);
 });
 
-// API ROUTES
+// ROUTES
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/posts", postRoutes);
 app.use("/images", imageRoutes);
-app.use("/upload", uploadRoutes); // optional if using a /upload router
+app.use("/upload", uploadRoutes); // Optional upload route
 
 // HOME ROUTE
 app.get("/", (req, res) => {

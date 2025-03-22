@@ -4,34 +4,36 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js'; // ✅ Remove .js if using ts-node
 
 // REGISTER USER
+// REGISTER USER
 export const register = async (req: Request, res: Response) => {
-    try {
-        // Generate new password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(req.body.password, salt);
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
-        // Create new user
-        const newUser = new User({
-            firstName: req.body.firstName,
-            lastName: req.body.lastName,
-            email: req.body.email,
-            password: hashedPassword,
-            picture: req.file ? req.file.path : '',
-            friends: [],
-            location: req.body.location,
-            occupation: req.body.occupation,
-            viewedProfile: Math.floor(Math.random() * 100),
-            impressions: Math.floor(Math.random() * 100),
-            picturePath: req.file ? req.file.path : "default-profile.png",
-        });
+    const pictureFileName = req.file ? req.file.filename : "default-profile.png";
 
-        // Save user and respond
-        const savedUser = await newUser.save();
-        res.status(201).json({ success: true, user: savedUser });
-    } catch (err) {
-        res.status(500).json(err);
-    }
+    const newUser = new User({
+      firstName: req.body.firstName,
+      lastName: req.body.lastName,
+      email: req.body.email,
+      password: hashedPassword,
+      picture: pictureFileName,
+      picturePath: pictureFileName, // ✅ Only store filename
+      friends: [],
+      location: req.body.location,
+      occupation: req.body.occupation,
+      viewedProfile: Math.floor(Math.random() * 100),
+      impressions: Math.floor(Math.random() * 100),
+    });
+
+    const savedUser = await newUser.save();
+    res.status(201).json({ success: true, user: savedUser });
+  } catch (err) {
+    console.error("❌ Register Error:", err);
+    res.status(500).json({ error: "Failed to register user." });
+  }
 };
+
 
 // LOGGING IN
 export const login = async (req: Request, res: Response) => {

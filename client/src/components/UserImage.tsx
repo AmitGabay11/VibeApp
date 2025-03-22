@@ -5,16 +5,13 @@ interface UserImageProps {
   size?: string;
 }
 
-const UserImage = ({ image, size = "60px" }: UserImageProps) => {
-  console.log("UserImage - Received image prop:", image);
-
-  // Extract filename from path (e.g., "public/assets/p2.jpeg" → "p2.jpeg")
-  const imageName = image ? image.split("/").pop() : "default-profile.png";
-
-  // Ensure backend URL is correct
+const UserImage = ({ image = "", size = "60px" }: UserImageProps) => {
   const backendUrl = process.env.REACT_APP_BACKEND_URL || "http://localhost:5001";
-  const imgUrl = `${backendUrl}/upload/${imageName}`;
 
+  // Don't include any path — assume image is the filename like "abc123.jpeg"
+  const imageName = image.split("/").pop() || "default-profile.png";
+
+  const imgUrl = `${backendUrl}/upload/${imageName}`;
   const [imgSrc, setImgSrc] = useState(imgUrl);
 
   useEffect(() => {
@@ -27,10 +24,10 @@ const UserImage = ({ image, size = "60px" }: UserImageProps) => {
       alt="User"
       width={size}
       height={size}
-      style={{ borderRadius: "50%" }}
+      style={{ borderRadius: "50%", objectFit: "cover" }}
       onError={() => {
-        console.error("UserImage - Failed to load image, using fallback.");
-        setImgSrc("/assets/default-profile.png"); // ✅ Fallback image
+        console.warn("🛑 UserImage - Failed to load:", imgSrc, "→ Using fallback.");
+        setImgSrc("/assets/default-profile.png");
       }}
     />
   );
