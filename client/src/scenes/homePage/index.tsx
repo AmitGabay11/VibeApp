@@ -3,7 +3,8 @@ import React from "react";
 import Navbar from "../navbar";
 import UserWidget from "../widgets/UserWidget";
 import MyPostWidget from "../widgets/MyPostWidget";
-import PostsWidget from "../widgets/PostsWidget"; // ✅ Added this!
+import PostsWidget from "../widgets/PostsWidget";
+import GeminiAssistant from "../../components/GeminiAssistant"; // ✅ Import GeminiAssistant
 import { useSelector } from "react-redux";
 import { RootState } from "../../state/store";
 import { useMediaQuery } from "@mui/material";
@@ -42,13 +43,17 @@ const HomePage: React.FC = () => {
           {user && (
             <>
               <MyPostWidget picturePath={picturePath || ""} />
-              <PostsWidget userId={_id || ""} /> {/* ✅ This shows the posts */}
+              <PostsWidget userId={_id || ""} />
             </>
           )}
         </Box>
 
-        {/* Right column - (Optional for future widgets) */}
-        {isNonMobileScreens && <Box flexBasis="26%" />}
+        {/* Right column - Gemini Assistant */}
+        {isNonMobileScreens && (
+          <Box flexBasis="26%">
+            <GeminiAssistant /> {/* ✅ Add GeminiAssistant here */}
+          </Box>
+        )}
       </Box>
     </Box>
   );
