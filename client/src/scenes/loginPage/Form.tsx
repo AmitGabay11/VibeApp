@@ -17,6 +17,7 @@ import { setLogin } from '../../state';
 import Dropzone, { Accept } from 'react-dropzone';
 import FlexBetween from '../../components/FlexBetween';
 import { GoogleLogin } from '@react-oauth/google';
+import GoogleLoginButton from "../../components/GoogleLoginButton";
 
 // 🔹 Define Type for Register Values
 interface RegisterValues {
