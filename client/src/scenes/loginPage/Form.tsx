@@ -6,15 +6,17 @@ import {
   useMediaQuery,
   Typography,
   useTheme,
+  CircularProgress,
 } from '@mui/material';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { Formik, FormikHelpers } from 'formik';
 import * as yup from 'yup';
 import { useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { setLogin } from '../../state'; 
+import { setLogin } from '../../state';
 import Dropzone, { Accept } from 'react-dropzone';
-import FlexBetween from '../../components/FlexBetween'; 
+import FlexBetween from '../../components/FlexBetween';
+import { GoogleLogin } from '@react-oauth/google';
 
 // 🔹 Define Type for Register Values
 interface RegisterValues {
@@ -32,54 +34,53 @@ interface LoginValues {
   email: string;
   password: string;
   firstName?: string;
-    lastName?: string;
-    location?: string;
-    occupation?: string;
-    picture?: File | null;
+  lastName?: string;
+  location?: string;
+  occupation?: string;
+  picture?: File | null;
 }
 
 // 🔹 Define Validation Schemas
 const registerSchema = yup.object().shape({
-  firstName: yup.string().required("Required"),
-  lastName: yup.string().required("Required"),
-  email: yup.string().email("Invalid email").required("Required"),
-  password: yup.string().required("Required"),
-  location: yup.string().required("Required"),
-  occupation: yup.string().required("Required"),
-  picture: yup.mixed().required("Required"),
+  firstName: yup.string().required('Required'),
+  lastName: yup.string().required('Required'),
+  email: yup.string().email('Invalid email').required('Required'),
+  password: yup.string().required('Required'),
+  location: yup.string().required('Required'),
+  occupation: yup.string().required('Required'),
+  picture: yup.mixed().required('Required'),
 });
 
 const loginSchema = yup.object().shape({
-  email: yup.string().email("Invalid email").required("Required"),
-  password: yup.string().required("Required"),
+  email: yup.string().email('Invalid email').required('Required'),
+  password: yup.string().required('Required'),
 });
 
 // 🔹 Define Initial Values
 const initialValuesRegister: RegisterValues = {
-  firstName: "",
-  lastName: "",
-  email: "",
-  password: "",
-  location: "",
-  occupation: "",
+  firstName: '',
+  lastName: '',
+  email: '',
+  password: '',
+  location: '',
+  occupation: '',
   picture: null,
 };
 
 const initialValuesLogin: LoginValues = {
-  email: "",
-  password: "",
+  email: '',
+  password: '',
 };
 
 // 🔹 Define Component
 const Form: React.FC = () => {
-  const [pageType, setPageType] = useState<"login" | "register">("login");
+  const [pageType, setPageType] = useState<'login' | 'register'>('login');
   const { palette } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  console.log("🔄 useNavigate initialized:", navigate);
-  const isNonMobile = useMediaQuery("(min-width:600px)");
-  const isLogin = pageType === "login";
-  const isRegister = pageType === "register";
+  const isNonMobile = useMediaQuery('(min-width:600px)');
+  const isLogin = pageType === 'login';
+  const isRegister = pageType === 'register';
 
   // 🔹 Register User
   const register = async (
@@ -88,60 +89,45 @@ const Form: React.FC = () => {
   ) => {
     try {
       const formData = new FormData();
-      formData.append("firstName", values.firstName);
-      formData.append("lastName", values.lastName);
-      formData.append("email", values.email);
-      formData.append("password", values.password);
-      formData.append("location", values.location);
-      formData.append("occupation", values.occupation);
+      formData.append('firstName', values.firstName);
+      formData.append('lastName', values.lastName);
+      formData.append('email', values.email);
+      formData.append('password', values.password);
+      formData.append('location', values.location);
+      formData.append('occupation', values.occupation);
       if (values.picture) {
-        formData.append("picture", values.picture);
+        formData.append('picture', values.picture);
       }
-  
-      const response = await fetch("http://localhost:5001/auth/register", {
-        method: "POST",
+
+      const response = await fetch('http://localhost:5001/auth/register', {
+        method: 'POST',
         body: formData,
       });
-  
+
       if (!response.ok) {
         throw new Error(`Server Error: ${response.status}`);
       }
-  
-      // ✅ Check if response is JSON before parsing
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Server did not return JSON. Check backend response.");
-      }
-  
+
       const savedUser = await response.json();
-      console.log("✅ Registration Response:", savedUser);
-  
       onSubmitProps.resetForm();
-  
+
       if (savedUser.success) {
-        console.log("✅ Navigating to login page...");
-        setPageType("login");
-        setTimeout(() => navigate("/", { replace: true }), 100);// Delay to ensure execution
-      } else {
-        console.error("❌ Registration failed:", savedUser);
+        setPageType('login');
+        navigate('/', { replace: true });
       }
     } catch (error) {
-      console.error("❌ Registration Error:", error);
+      console.error('Registration Error:', error);
     }
   };
-  
-
-  
-  
 
   // 🔹 Login User
   const login = async (
     values: LoginValues,
     onSubmitProps: FormikHelpers<LoginValues>
   ) => {
-    const loggedInResponse = await fetch("http://localhost:5001/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    const loggedInResponse = await fetch('http://localhost:5001/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(values),
     });
 
@@ -150,7 +136,28 @@ const Form: React.FC = () => {
 
     if (loggedIn) {
       dispatch(setLogin({ user: loggedIn.user, token: loggedIn.token }));
-      navigate("/home");
+      navigate('/home');
+    }
+  };
+
+  // 🔹 Handle Google Login Success
+  const handleGoogleLoginSuccess = async (credentialResponse: any) => {
+    try {
+      const response = await fetch('http://localhost:5001/auth/google-login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        dispatch(setLogin({ user: data.user, token: data.token }));
+        navigate('/home');
+      } else {
+        console.error('Google Login Failed:', data.message);
+      }
+    } catch (error) {
+      console.error('Google Login Error:', error);
     }
   };
 
@@ -160,7 +167,8 @@ const Form: React.FC = () => {
     onSubmitProps: FormikHelpers<RegisterValues | LoginValues>
   ) => {
     if (isLogin) await login(values as LoginValues, onSubmitProps);
-    if (isRegister) await register(values as RegisterValues, onSubmitProps as FormikHelpers<RegisterValues>);
+    if (isRegister)
+      await register(values as RegisterValues, onSubmitProps as FormikHelpers<RegisterValues>);
   };
 
   return (
@@ -184,7 +192,7 @@ const Form: React.FC = () => {
             display="grid"
             gap="30px"
             gridTemplateColumns="repeat(4, minmax(0, 1fr))"
-            sx={{ "& > div": { gridColumn: isNonMobile ? undefined : "span 4" } }}
+            sx={{ '& > div': { gridColumn: isNonMobile ? undefined : 'span 4' } }}
           >
             {isRegister && (
               <>
@@ -193,40 +201,40 @@ const Form: React.FC = () => {
                   name="firstName"
                   onBlur={handleBlur}
                   onChange={handleChange}
-                  value={values.firstName || ""}
+                  value={values.firstName || ''}
                   error={Boolean(touched.firstName && errors.firstName)}
                   helperText={touched.firstName && errors.firstName}
-                  sx={{ gridColumn: "span 2" }}
+                  sx={{ gridColumn: 'span 2' }}
                 />
                 <TextField
                   label="Last Name"
                   name="lastName"
                   onBlur={handleBlur}
                   onChange={handleChange}
-                  value={values.lastName || ""}
+                  value={values.lastName || ''}
                   error={Boolean(touched.lastName && errors.lastName)}
                   helperText={touched.lastName && errors.lastName}
-                  sx={{ gridColumn: "span 2" }}
+                  sx={{ gridColumn: 'span 2' }}
                 />
                 <TextField
                   label="Location"
                   name="location"
                   onBlur={handleBlur}
                   onChange={handleChange}
-                  value={values.location || ""}
+                  value={values.location || ''}
                   error={Boolean(touched.location && errors.location)}
                   helperText={touched.location && errors.location}
-                  sx={{ gridColumn: "span 4" }}
+                  sx={{ gridColumn: 'span 4' }}
                 />
                 <TextField
                   label="Occupation"
                   name="occupation"
                   onBlur={handleBlur}
                   onChange={handleChange}
-                  value={values.occupation || ""}
+                  value={values.occupation || ''}
                   error={Boolean(touched.occupation && errors.occupation)}
                   helperText={touched.occupation && errors.occupation}
-                  sx={{ gridColumn: "span 4" }}
+                  sx={{ gridColumn: 'span 4' }}
                 />
                 <Box
                   gridColumn="span 4"
@@ -237,14 +245,14 @@ const Form: React.FC = () => {
                   <Dropzone
                     accept={{ 'image/*': [] } as Accept}
                     multiple={false}
-                    onDrop={(acceptedFiles) => setFieldValue("picture", acceptedFiles[0])}
+                    onDrop={(acceptedFiles) => setFieldValue('picture', acceptedFiles[0])}
                   >
                     {({ getRootProps, getInputProps }) => (
                       <Box
                         {...getRootProps()}
                         border={`2px dashed ${palette.primary.main}`}
                         p="1rem"
-                        sx={{ "&:hover": { cursor: "pointer" } }}
+                        sx={{ '&:hover': { cursor: 'pointer' } }}
                       >
                         <input {...getInputProps()} />
                         {!values.picture ? (
@@ -267,10 +275,10 @@ const Form: React.FC = () => {
               name="email"
               onBlur={handleBlur}
               onChange={handleChange}
-              value={values.email || ""}
+              value={values.email || ''}
               error={Boolean(touched.email && errors.email)}
               helperText={touched.email && errors.email}
-              sx={{ gridColumn: "span 4" }}
+              sx={{ gridColumn: 'span 4' }}
             />
             <TextField
               label="Password"
@@ -278,41 +286,48 @@ const Form: React.FC = () => {
               type="password"
               onBlur={handleBlur}
               onChange={handleChange}
-              value={values.password || ""}
+              value={values.password || ''}
               error={Boolean(touched.password && errors.password)}
               helperText={touched.password && errors.password}
-              sx={{ gridColumn: "span 4" }}
+              sx={{ gridColumn: 'span 4' }}
             />
           </Box>
 
           <Box>
-            <Button fullWidth type="submit" sx={{ m: "2rem 0", p: "1rem" }}>
-              {isLogin ? "LOGIN" : "REGISTER"}
+            <Button fullWidth type="submit" sx={{ m: '2rem 0', p: '1rem' }}>
+              {isLogin ? 'LOGIN' : 'REGISTER'}
             </Button>
             <Typography
-    onClick={() => {
-      setPageType(isLogin ? "register" : "login");
-      resetForm();
-    }}
-    sx={{
-      textDecoration: "underline",
-      color: palette.primary.main,
-      "&:hover": {
-        cursor: "pointer",
-        color: palette.primary.light,
-      },
-    }}
-  >
-    {isLogin
-      ? "Don't have an account? Sign Up here."
-      : "Already have an account? Login here."}
-  </Typography>
+              onClick={() => {
+                setPageType(isLogin ? 'register' : 'login');
+                resetForm();
+              }}
+              sx={{
+                textDecoration: 'underline',
+                color: palette.primary.main,
+                '&:hover': {
+                  cursor: 'pointer',
+                  color: palette.primary.light,
+                },
+              }}
+            >
+              {isLogin
+                ? "Don't have an account? Sign Up here."
+                : 'Already have an account? Login here.'}
+            </Typography>
+          </Box>
+
+          {/* Google Login Button */}
+          <Box sx={{ mt: '1rem' }}>
+            <GoogleLogin
+              onSuccess={handleGoogleLoginSuccess}
+              onError={() => console.error('Google Login Failed')}
+            />
           </Box>
         </form>
       )}
     </Formik>
   );
 };
-
 
 export default Form;

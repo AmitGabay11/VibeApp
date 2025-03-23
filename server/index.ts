@@ -15,12 +15,10 @@ import userRoutes from './routes/users.js';
 import postRoutes from './routes/posts.js'; 
 import imageRoutes from './routes/images.js';
 import uploadRoutes from './routes/upload.js';
-import geminiRoutes from "./routes/gemini.js";
 
 import { register } from './controllers/auth.js';  
 import { createPost } from './controllers/posts.js';  
 import { verifyToken } from './middleware/auth.js';
-
 
 // CONFIGURATION
 const __filename = fileURLToPath(import.meta.url);
@@ -57,9 +55,17 @@ const upload = multer({ storage });
 // ROUTES WITH FILE UPLOADS
 app.post("/auth/register", upload.single("picture"), register);
 
+interface AuthRequest extends express.Request {
+  user?: any; // Replace 'any' with the actual type of 'user' if known
+}
+
+const handler = (fn: (req: AuthRequest, res: Response) => any) => 
+  (req: Request, res: Response) => fn(req as unknown as AuthRequest, res);
+
+
 app.post("/posts", verifyToken, upload.single("picture"), (req, res) => {
   req.body.picturePath = req.file?.filename || "";
-  return createPost(req, res);
+  return createPost(req as unknown as AuthRequest, res);
 });
 
 // ROUTES
@@ -68,8 +74,6 @@ app.use("/users", userRoutes);
 app.use("/posts", postRoutes);
 app.use("/images", imageRoutes);
 app.use("/upload", uploadRoutes); // Optional upload route
-app.use("/api/gemini", geminiRoutes);
-
 
 // HOME ROUTE
 app.get("/", (req, res) => {
