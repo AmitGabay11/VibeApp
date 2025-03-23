@@ -1,10 +1,21 @@
 import { useState } from "react";
- 
+import {
+  Box,
+  Typography,
+  InputBase,
+  Button,
+  CircularProgress,
+  useTheme,
+} from "@mui/material";
+import WidgetWrapper from "../components/WidgetWrapper";
 
 const GeminiAssistant = () => {
   const [prompt, setPrompt] = useState("");
   const [suggestion, setSuggestion] = useState("");
   const [loading, setLoading] = useState(false);
+  const { palette } = useTheme();
+  const primary = palette.primary.main;
+  const medium = palette.grey[500];
 
   const handleGenerate = async () => {
     if (!prompt.trim()) return;
@@ -12,13 +23,13 @@ const GeminiAssistant = () => {
     setSuggestion("");
 
     try {
-        const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/gemini`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ prompt }),
-          });
+      const res = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/gemini`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ prompt }),
+      });
 
       if (!res.ok) {
         throw new Error(`HTTP error! status: ${res.status}`);
@@ -35,30 +46,97 @@ const GeminiAssistant = () => {
   };
 
   return (
-    <div className="p-4 bg-white border rounded shadow max-w-xl mx-auto my-6">
-      <h2 className="text-xl font-semibold mb-2">Need help writing your post?</h2>
-      <textarea
-        className="w-full border p-2 rounded mb-2"
-        rows={4}
-        placeholder="Describe your idea or ask Gemini to help..."
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-      />
-      <button
-        onClick={handleGenerate}
-        className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
-        disabled={loading}
+    <WidgetWrapper>
+      <Typography
+        variant="h5"
+        fontWeight="600"
+        sx={{
+          color: primary,
+          mb: "1rem",
+          textAlign: "center", // Center the text horizontally
+        }}
       >
-        {loading ? "Thinking..." : "Generate Suggestion"}
-      </button>
-
-      {suggestion && (
-        <div className="mt-4 p-3 bg-gray-100 rounded">
-          <strong>Suggested Post:</strong>
-          <p>{suggestion}</p>
-        </div>
-      )}
-    </div>
+        Need help writing your post? 🤖
+      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center", // Center horizontally
+          alignItems: "center", // Center vertically
+          flexDirection: "column", // Stack items vertically
+          mb: "1rem", // Add spacing below the title
+        }}
+      >
+        <InputBase
+          placeholder="Describe your idea or ask Gemini to help..."
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          sx={{
+            width: "100%",
+            backgroundColor: palette.background.paper,
+            borderRadius: "0.75rem",
+            padding: "1rem",
+            mb: "1rem",
+            border: `1px solid ${medium}`,
+          }}
+          multiline
+          rows={4}
+        />
+        <Button
+          onClick={handleGenerate}
+          disabled={loading || !prompt.trim()}
+          sx={{
+            width: "100%",
+            backgroundColor: primary,
+            color: palette.background.paper,
+            padding: "0.75rem",
+            borderRadius: "0.75rem",
+            "&:hover": {
+              backgroundColor: palette.primary.dark,
+            },
+            mb: "1rem",
+          }}
+        >
+          {loading ? <CircularProgress size={24} sx={{ color: "white" }} /> : "Generate Suggestion"}
+        </Button>
+        {suggestion && (
+          <Box
+            sx={{
+              backgroundColor: palette.background.paper,
+              borderRadius: "1rem",
+              padding: "1.5rem",
+              mt: "1.5rem",
+              border: `1px solid ${primary}`,
+              boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)", // Add a subtle shadow
+            }}
+          >
+            <Typography
+              variant="h5"
+              fontWeight="700"
+              sx={{
+                color: primary,
+                mb: "1rem",
+                textAlign: "center", // Center the title
+              }}
+            >
+              Suggested Post
+            </Typography>
+            <Typography
+              sx={{
+                color: palette.text.primary,
+                fontSize: "1rem",
+                lineHeight: "1.5rem",
+                textAlign: "left", // Justify the text for better readability
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word"
+              }}
+            >
+              {suggestion}
+            </Typography>
+          </Box>
+        )}
+      </Box>
+    </WidgetWrapper>
   );
 };
 
