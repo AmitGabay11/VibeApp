@@ -15,6 +15,7 @@ import userRoutes from './routes/users.js';
 import postRoutes from './routes/posts.js'; 
 import imageRoutes from './routes/images.js';
 import uploadRoutes from './routes/upload.js';
+import geminiRoutes from './routes/gemini.js';
 
 import { register } from './controllers/auth.js';  
 import { createPost } from './controllers/posts.js';  
@@ -74,6 +75,7 @@ app.use("/users", userRoutes);
 app.use("/posts", postRoutes);
 app.use("/images", imageRoutes);
 app.use("/upload", uploadRoutes); // Optional upload route
+app.use("/api/gemini", geminiRoutes);
 
 // HOME ROUTE
 app.get("/", (req, res) => {
