@@ -10,6 +10,8 @@ import { fileURLToPath } from 'url';
 import morgan from 'morgan';
 import { v4 as uuidv4 } from 'uuid';
 
+import { setupSwagger } from './swagger.js';
+
 import authRoutes from './routes/auth.js';  
 import userRoutes from './routes/users.js'; 
 import postRoutes from './routes/posts.js'; 
@@ -81,6 +83,8 @@ app.use("/api/gemini", geminiRoutes);
 app.get("/", (req, res) => {
   res.send("<h1>Welcome to the Vibe App Server! 🚀</h1>");
 });
+
+setupSwagger(app);
 
 // DATABASE CONNECTION
 const PORT = process.env.PORT || 5000;

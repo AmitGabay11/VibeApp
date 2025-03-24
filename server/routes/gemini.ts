@@ -6,6 +6,37 @@ const router = express.Router();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
+/**
+ * @swagger
+ * tags:
+ *   name: Gemini
+ *   description: Content suggestions via Gemini API
+ */
+
+/**
+ * @swagger
+ * /gemini:
+ *   post:
+ *     summary: Generate content suggestion from Gemini API
+ *     tags: [Gemini]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               prompt:
+ *                 type: string
+ *                 example: Write a creative post about AI and nature
+ *     responses:
+ *       200:
+ *         description: Suggestion generated successfully
+ *       400:
+ *         description: Prompt is required
+ *       500:
+ *         description: Failed to fetch suggestion
+ */
 router.post("/", async (req, res) => {
   const { prompt } = req.body;
 

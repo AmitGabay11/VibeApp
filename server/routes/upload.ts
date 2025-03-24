@@ -16,7 +16,43 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// ✅ API to upload profile picture
+/**
+ * @swagger
+ * tags:
+ *   name: Upload
+ *   description: Upload and serve images
+ */
+
+
+/**
+ * @swagger
+ * /upload/{userId}:
+ *   post:
+ *     summary: Upload a profile picture
+ *     tags: [Upload]
+ *     consumes:
+ *       - multipart/form-data
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID of the user
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               picture:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       200:
+ *         description: Profile picture uploaded
+ */
 router.post("/:userId", upload.single("picture"), async (req: Request, res: Response) => {
   try {
     if (!req.file) return res.status(400).json({ message: "No file uploaded" });
@@ -33,7 +69,24 @@ router.post("/:userId", upload.single("picture"), async (req: Request, res: Resp
   }
 });
 
-// ✅ API to serve images from `public/uploads/`
+/**
+ * @swagger
+ * /upload/{filename}:
+ *   get:
+ *     summary: Get uploaded image by filename
+ *     tags: [Upload]
+ *     parameters:
+ *       - in: path
+ *         name: filename
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Filename of the image
+ *     responses:
+ *       200:
+ *         description: Image file returned
+ */
+
 router.get("/:filename", (req, res) => {
   res.sendFile(path.resolve(`./public/uploads/${req.params.filename}`));
 });
