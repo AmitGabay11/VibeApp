@@ -77,11 +77,28 @@ router.get("/:userId/posts", verifyToken, getUserPosts);
  *           type: string
  *         required: true
  *         description: Post ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: 67e155785bc662647f6499c7
  *     responses:
  *       200:
  *         description: Post liked or unliked
+ *       400:
+ *         description: Missing userId or invalid post ID
+ *       404:
+ *         description: Post not found
+ *       500:
+ *         description: Server error
  */
-
 router.patch("/:id/like", verifyToken, likePost);
 
 

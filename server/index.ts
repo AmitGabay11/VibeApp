@@ -1,3 +1,10 @@
+/**
+ * @swagger
+ * tags:
+ *   name: Posts
+ *   description: Post management
+ */
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
@@ -65,7 +72,43 @@ interface AuthRequest extends express.Request {
 const handler = (fn: (req: AuthRequest, res: Response) => any) => 
   (req: Request, res: Response) => fn(req as unknown as AuthRequest, res);
 
-
+/**
+ * @swagger
+ * /posts:
+ *   post:
+ *     summary: Create a new post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     consumes:
+ *       - multipart/form-data
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - description
+ *             properties:
+ *               userId:
+ *                 type: string
+ *                 example: 605c5f2c4b1e4e3cf09fb87d
+ *               description:
+ *                 type: string
+ *                 example: My first post!
+ *               picture:
+ *                 type: string
+ *                 format: binary
+ *     responses:
+ *       201:
+ *         description: Post created successfully
+ *       400:
+ *         description: Bad request or missing fields
+ *       500:
+ *         description: Server error
+ */
 app.post("/posts", verifyToken, upload.single("picture"), (req, res) => {
   req.body.picturePath = req.file?.filename || "";
   return createPost(req as unknown as AuthRequest, res);

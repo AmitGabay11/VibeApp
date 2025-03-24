@@ -86,68 +86,9 @@ router.post("/register", register);
  */
 router.post("/login", login);
 
-/**
- * @swagger
- * /auth/google-login:
- *   post:
- *     summary: Log in using Google OAuth
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               token:
- *                 type: string
- *     responses:
- *       200:
- *         description: Logged in via Google
- */
+
 router.post("/google-login", googleLogin);
-
-
-/**
- * @swagger
- * /auth/google-register:
- *   post:
- *     summary: Register using Google OAuth
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               token:
- *                 type: string
- *     responses:
- *       201:
- *         description: Registered via Google
- */
 router.post("/google-register", googleLogin); // Reuse the same controller for registration
-
-/**
- * @swagger
- * /auth/google-profile:
- *   post:
- *     summary: Get Google profile info from token
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               token:
- *                 type: string
- *     responses:
- *       200:
- *         description: Google profile returned
- */
 router.post("/google-profile", googleProfile);
 
 

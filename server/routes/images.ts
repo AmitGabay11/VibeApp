@@ -13,35 +13,10 @@ conn.once("open", () => {
   gfs.collection("uploads");
 });
 
-/**
- * @swagger
- * tags:
- *   name: Images
- *   description: Retrieve images from GridFS
- */
 
 
-/**
- * @swagger
- * /images/{filename}:
- *   get:
- *     summary: Retrieve an image stored in GridFS by filename
- *     tags: [Images]
- *     parameters:
- *       - in: path
- *         name: filename
- *         required: true
- *         schema:
- *           type: string
- *         description: The name of the image file
- *     responses:
- *       200:
- *         description: Image streamed from database
- *       404:
- *         description: Image not found
- *       500:
- *         description: Error retrieving image
- */
+
+
 router.get("/:filename", async (req: Request<{ filename: string }>, res: Response) => {
   try {
     if (!gfs) {
