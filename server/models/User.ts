@@ -26,6 +26,7 @@ const userSchema = new Schema<IUser>(
         email: { type: String, required: true, maxlength: 255, unique: true },
         password: { type: String, required: true, minlength: 5, maxlength: 1024 },
         picture: { type: String, default: '' },
+        picturePath: { type: String, default: "default-profile.png" },
         location: { type: String, default: '' },
         occupation: { type: String, default: '' },
         viewedProfile: { type: Number, default: 0 },

@@ -46,52 +46,10 @@ const storage = multer.diskStorage({
  */
 router.get('/:id', verifyToken, getUser);
 
-/**
- * @swagger
- * /users/friends/{userId}:
- *   get:
- *     summary: Get a user's friends list
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: userId
- *         required: true
- *         schema:
- *           type: string
- *         description: User ID
- *     responses:
- *       200:
- *         description: List of user's friends
- */
+
 router.get('/friends/:userId', verifyToken, getUserFriends);
 
-/**
- * @swagger
- * /users/{id}/{friendId}:
- *   patch:
- *     summary: Add or remove a friend
- *     tags: [Users]
- *     security:
- *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: User ID
- *       - in: path
- *         name: friendId
- *         required: true
- *         schema:
- *           type: string
- *         description: Friend ID
- *     responses:
- *       200:
- *         description: Friendship status updated
- */
+
 router.patch('/:id/:friendId', verifyToken, addRemoveFriend);
 
 /**

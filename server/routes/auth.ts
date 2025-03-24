@@ -18,12 +18,21 @@ const router = express.Router();
  *   post:
  *     summary: Register a new user
  *     tags: [Auth]
+ *     consumes:
+ *       - multipart/form-data
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - firstName
+ *               - lastName
+ *               - location
+ *               - occupation
  *             properties:
  *               email:
  *                 type: string
@@ -33,12 +42,25 @@ const router = express.Router();
  *                 example: password123
  *               firstName:
  *                 type: string
+ *                 example: John
  *               lastName:
  *                 type: string
+ *                 example: Doe
+ *               location:
+ *                 type: string
+ *                 example: New York, USA
+ *               occupation:
+ *                 type: string
+ *                 example: Software Engineer
+ *               picture:
+ *                 type: string
+ *                 format: binary
  *     responses:
  *       201:
  *         description: User registered successfully
  */
+
+
 router.post("/register", register);
 
 /**

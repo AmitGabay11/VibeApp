@@ -15,7 +15,7 @@ const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 /**
  * @swagger
- * /gemini:
+ * /api/gemini:
  *   post:
  *     summary: Generate content suggestion from Gemini API
  *     tags: [Gemini]
