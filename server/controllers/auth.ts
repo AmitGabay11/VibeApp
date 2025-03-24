@@ -97,7 +97,7 @@ export const googleLogin = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: "Invalid Google Token" });
     }
 
-    const user = await findOrCreateUser(payload);
+    const user = await findOrCreateUser(payload); // Reuse the helper function
     if (!process.env.JWT_SECRET) {
       throw new Error("JWT_SECRET is not defined in environment variables.");
     }
@@ -105,6 +105,42 @@ export const googleLogin = async (req: Request, res: Response) => {
 
     res.status(200).json({ success: true, user, token: jwtToken });
   } catch (error) {
-    res.status(400).json({ success: false, message: "Google Login Failed" });
+    res.status(400).json({ success: false, message: "Google Login/Registration Failed" });
+  }
+};
+
+// 🔹 Google Register Profile Fetch
+export const googleProfile = async (req: Request, res: Response) => {
+  try {
+    const { token } = req.body;
+
+    const ticket = await client.verifyIdToken({
+      idToken: token,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const email = payload?.email;
+    const firstName = payload?.given_name;
+    const lastName = payload?.family_name;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: "Email is required from Google profile." });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(200).json({ success: false, message: "User already exists." });
+    }
+
+    return res.status(200).json({
+      success: true,
+      email,
+      firstName,
+      lastName,
+    });
+  } catch (error) {
+    console.error("❌ Google profile error:", error);
+    return res.status(500).json({ success: false, message: "Google token verification failed." });
   }
 };

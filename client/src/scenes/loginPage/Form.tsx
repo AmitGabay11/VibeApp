@@ -6,7 +6,6 @@ import {
   useMediaQuery,
   Typography,
   useTheme,
-  CircularProgress,
 } from '@mui/material';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
 import { Formik, FormikHelpers } from 'formik';
@@ -17,21 +16,9 @@ import { setLogin } from '../../state';
 import Dropzone, { Accept } from 'react-dropzone';
 import FlexBetween from '../../components/FlexBetween';
 import { GoogleLogin } from '@react-oauth/google';
-import GoogleLoginButton from "../../components/GoogleLoginButton";
 
-// 🔹 Define Type for Register Values
-interface RegisterValues {
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  location: string;
-  occupation: string;
-  picture: File | null;
-}
-
-// 🔹 Define Type for Login Values
-interface LoginValues {
+// 🔹 Unified Type for Both Login & Register
+interface FormValues {
   email: string;
   password: string;
   firstName?: string;
@@ -41,7 +28,7 @@ interface LoginValues {
   picture?: File | null;
 }
 
-// 🔹 Define Validation Schemas
+// 🔹 Validation Schemas
 const registerSchema = yup.object().shape({
   firstName: yup.string().required('Required'),
   lastName: yup.string().required('Required'),
@@ -57,8 +44,8 @@ const loginSchema = yup.object().shape({
   password: yup.string().required('Required'),
 });
 
-// 🔹 Define Initial Values
-const initialValuesRegister: RegisterValues = {
+// 🔹 Initial Values
+const initialValuesRegister: FormValues = {
   firstName: '',
   lastName: '',
   email: '',
@@ -68,14 +55,14 @@ const initialValuesRegister: RegisterValues = {
   picture: null,
 };
 
-const initialValuesLogin: LoginValues = {
+const initialValuesLogin: FormValues = {
   email: '',
   password: '',
 };
 
-// 🔹 Define Component
 const Form: React.FC = () => {
   const [pageType, setPageType] = useState<'login' | 'register'>('login');
+  const [googleProfile, setGoogleProfile] = useState<Partial<FormValues> | null>(null);
   const { palette } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -83,31 +70,19 @@ const Form: React.FC = () => {
   const isLogin = pageType === 'login';
   const isRegister = pageType === 'register';
 
-  // 🔹 Register User
-  const register = async (
-    values: RegisterValues,
-    onSubmitProps: FormikHelpers<RegisterValues>
-  ) => {
+  const register = async (values: FormValues, onSubmitProps: FormikHelpers<FormValues>) => {
     try {
       const formData = new FormData();
-      formData.append('firstName', values.firstName);
-      formData.append('lastName', values.lastName);
-      formData.append('email', values.email);
-      formData.append('password', values.password);
-      formData.append('location', values.location);
-      formData.append('occupation', values.occupation);
-      if (values.picture) {
-        formData.append('picture', values.picture);
-      }
+      Object.entries(values).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          formData.append(key, value);
+        }
+      });
 
       const response = await fetch('http://localhost:5001/auth/register', {
         method: 'POST',
         body: formData,
       });
-
-      if (!response.ok) {
-        throw new Error(`Server Error: ${response.status}`);
-      }
 
       const savedUser = await response.json();
       onSubmitProps.resetForm();
@@ -121,11 +96,7 @@ const Form: React.FC = () => {
     }
   };
 
-  // 🔹 Login User
-  const login = async (
-    values: LoginValues,
-    onSubmitProps: FormikHelpers<LoginValues>
-  ) => {
+  const login = async (values: FormValues, onSubmitProps: FormikHelpers<FormValues>) => {
     const loggedInResponse = await fetch('http://localhost:5001/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -141,7 +112,6 @@ const Form: React.FC = () => {
     }
   };
 
-  // 🔹 Handle Google Login Success
   const handleGoogleLoginSuccess = async (credentialResponse: any) => {
     try {
       const response = await fetch('http://localhost:5001/auth/google-login', {
@@ -154,29 +124,51 @@ const Form: React.FC = () => {
       if (data.success) {
         dispatch(setLogin({ user: data.user, token: data.token }));
         navigate('/home');
-      } else {
-        console.error('Google Login Failed:', data.message);
       }
     } catch (error) {
       console.error('Google Login Error:', error);
     }
   };
 
-  // 🔹 Form Submission Handler
+  const handleGoogleRegisterSuccess = async (credentialResponse: any) => {
+    try {
+      const response = await fetch('http://localhost:5001/auth/google-profile', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setGoogleProfile({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+        });
+        setPageType('register');
+      }
+    } catch (error) {
+      console.error('Google Profile Fetch Error:', error);
+    }
+  };
+
   const handleFormSubmit = async (
-    values: RegisterValues | LoginValues,
-    onSubmitProps: FormikHelpers<RegisterValues | LoginValues>
+    values: FormValues,
+    onSubmitProps: FormikHelpers<FormValues>
   ) => {
-    if (isLogin) await login(values as LoginValues, onSubmitProps);
-    if (isRegister)
-      await register(values as RegisterValues, onSubmitProps as FormikHelpers<RegisterValues>);
+    if (isLogin) await login(values, onSubmitProps);
+    if (isRegister) {
+      const finalValues = { ...values, ...googleProfile };
+      await register(finalValues, onSubmitProps);
+    }
   };
 
   return (
     <Formik
       onSubmit={handleFormSubmit}
-      initialValues={isLogin ? initialValuesLogin : initialValuesRegister}
+      initialValues={isLogin ? initialValuesLogin : { ...initialValuesRegister, ...googleProfile }}
       validationSchema={isLogin ? loginSchema : registerSchema}
+      enableReinitialize
     >
       {({
         values,
@@ -197,52 +189,13 @@ const Form: React.FC = () => {
           >
             {isRegister && (
               <>
-                <TextField
-                  label="First Name"
-                  name="firstName"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.firstName || ''}
-                  error={Boolean(touched.firstName && errors.firstName)}
-                  helperText={touched.firstName && errors.firstName}
-                  sx={{ gridColumn: 'span 2' }}
-                />
-                <TextField
-                  label="Last Name"
-                  name="lastName"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.lastName || ''}
-                  error={Boolean(touched.lastName && errors.lastName)}
-                  helperText={touched.lastName && errors.lastName}
-                  sx={{ gridColumn: 'span 2' }}
-                />
-                <TextField
-                  label="Location"
-                  name="location"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.location || ''}
-                  error={Boolean(touched.location && errors.location)}
-                  helperText={touched.location && errors.location}
-                  sx={{ gridColumn: 'span 4' }}
-                />
-                <TextField
-                  label="Occupation"
-                  name="occupation"
-                  onBlur={handleBlur}
-                  onChange={handleChange}
-                  value={values.occupation || ''}
-                  error={Boolean(touched.occupation && errors.occupation)}
-                  helperText={touched.occupation && errors.occupation}
-                  sx={{ gridColumn: 'span 4' }}
-                />
-                <Box
-                  gridColumn="span 4"
-                  border={`1px solid ${palette.grey[500]}`}
-                  borderRadius="5px"
-                  p="1rem"
-                >
+                <TextField label="First Name" name="firstName" onBlur={handleBlur} onChange={handleChange} value={values.firstName || ''} error={Boolean(touched.firstName && errors.firstName)} helperText={touched.firstName && errors.firstName} sx={{ gridColumn: 'span 2' }} disabled={!!googleProfile?.firstName} />
+                <TextField label="Last Name" name="lastName" onBlur={handleBlur} onChange={handleChange} value={values.lastName || ''} error={Boolean(touched.lastName && errors.lastName)} helperText={touched.lastName && errors.lastName} sx={{ gridColumn: 'span 2' }} disabled={!!googleProfile?.lastName} />
+                <TextField label="Email" name="email" onBlur={handleBlur} onChange={handleChange} value={values.email || ''} error={Boolean(touched.email && errors.email)} helperText={touched.email && errors.email} sx={{ gridColumn: 'span 4' }} disabled={!!googleProfile?.email} />
+                <TextField label="Password" name="password" type="password" onBlur={handleBlur} onChange={handleChange} value={values.password || ''} error={Boolean(touched.password && errors.password)} helperText={touched.password && errors.password} sx={{ gridColumn: 'span 4' }} />
+                <TextField label="Location" name="location" onBlur={handleBlur} onChange={handleChange} value={values.location || ''} error={Boolean(touched.location && errors.location)} helperText={touched.location && errors.location} sx={{ gridColumn: 'span 4' }} />
+                <TextField label="Occupation" name="occupation" onBlur={handleBlur} onChange={handleChange} value={values.occupation || ''} error={Boolean(touched.occupation && errors.occupation)} helperText={touched.occupation && errors.occupation} sx={{ gridColumn: 'span 4' }} />
+                <Box gridColumn="span 4" border={`1px solid ${palette.grey[500]}`} borderRadius="5px" p="1rem">
                   <Dropzone
                     accept={{ 'image/*': [] } as Accept}
                     multiple={false}
@@ -271,27 +224,12 @@ const Form: React.FC = () => {
               </>
             )}
 
-            <TextField
-              label="Email"
-              name="email"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.email || ''}
-              error={Boolean(touched.email && errors.email)}
-              helperText={touched.email && errors.email}
-              sx={{ gridColumn: 'span 4' }}
-            />
-            <TextField
-              label="Password"
-              name="password"
-              type="password"
-              onBlur={handleBlur}
-              onChange={handleChange}
-              value={values.password || ''}
-              error={Boolean(touched.password && errors.password)}
-              helperText={touched.password && errors.password}
-              sx={{ gridColumn: 'span 4' }}
-            />
+            {!isRegister && (
+              <>
+                <TextField label="Email" name="email" onBlur={handleBlur} onChange={handleChange} value={values.email || ''} error={Boolean(touched.email && errors.email)} helperText={touched.email && errors.email} sx={{ gridColumn: 'span 4' }} />
+                <TextField label="Password" name="password" type="password" onBlur={handleBlur} onChange={handleChange} value={values.password || ''} error={Boolean(touched.password && errors.password)} helperText={touched.password && errors.password} sx={{ gridColumn: 'span 4' }} />
+              </>
+            )}
           </Box>
 
           <Box>
@@ -318,13 +256,23 @@ const Form: React.FC = () => {
             </Typography>
           </Box>
 
-          {/* Google Login Button */}
-          <Box sx={{ mt: '1rem' }}>
-            <GoogleLogin
-              onSuccess={handleGoogleLoginSuccess}
-              onError={() => console.error('Google Login Failed')}
-            />
-          </Box>
+          {/* Google Login and Registration Buttons */}
+          {isLogin && (
+            <Box sx={{ mt: '1rem' }}>
+              <GoogleLogin
+                onSuccess={handleGoogleLoginSuccess}
+                onError={() => console.error('Google Login Failed')}
+              />
+            </Box>
+          )}
+          {isRegister && (
+            <Box sx={{ mt: '1rem' }}>
+              <GoogleLogin
+                onSuccess={handleGoogleRegisterSuccess}
+                onError={() => console.error('Google Register Failed')}
+              />
+            </Box>
+          )}
         </form>
       )}
     </Formik>
